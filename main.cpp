@@ -2,6 +2,28 @@
 #include "Client.h"
 #include <iostream>
 #include <cstring>
+#include <fstream>
+#include <iostream>
+#include <json/json.h>
+
+std::string SERVER_IP;
+int SERVER_PORT;
+
+void loadConfig() {
+    std::ifstream configFile("config.json");
+    if (!configFile) {
+        std::cout << "Error: could not open config.json" << std::endl;
+        exit(1);
+    }
+
+    Json::Value config;
+    configFile >> config;
+
+    SERVER_IP = config["server-ip"].asString();
+    SERVER_PORT = config["server_port"].asInt();
+
+    std::cout << "[SERVER]  Loaded Config: Server IP = " << SERVER_IP << ", Port = " << SERVER_PORT << std::endl;
+}
 
 void start_clients_and_server(int numClients, int startingPort) {
     
@@ -37,7 +59,7 @@ void startClient(int serverPort) {
 
     Client* client = new Client(serverPort, serverPort);
 
-    string addrStr = "127.0.0.1";
+    string addrStr = SERVER_IP;
     const char* addr = addrStr.c_str();
     client->connectToServerOnPort(addr, serverPort);
     std::string initMsg = "Client " + std::to_string(serverPort) + " connected";
@@ -75,14 +97,14 @@ void startClient(int serverPort) {
 
 int main(int argc, char* argv[]) {
 
-    //start_clients_and_server(2, 5001);
-    char* opt = argv[1];
-    char* port = argv[2];
+    loadConfig();
+
+    char* opt = argv[1]; // 0 for server, 1 for client
 
     if (strcmp(opt, "0") == 0) {
-        startServer(atoi(port));
+        startServer(SERVER_PORT);
     } else {
-        startClient(atoi(port));
+        startClient(SERVER_PORT);
     }
 
     //while(1) {}
