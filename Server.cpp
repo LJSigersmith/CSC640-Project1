@@ -36,7 +36,14 @@ void Server::_monitorClients() {
 
     while (true) {
         for (auto clientPair : _clientLastPulse) {
+
             string clientIP = clientPair.first;
+
+            // If client is dead, don't check it
+            if (!_clientStatus[clientIP]) {
+                continue;
+            }
+
             auto lastPulse = clientPair.second;
             auto now = chrono::steady_clock::now();
             auto duration = chrono::duration_cast<chrono::seconds>(now - lastPulse);
@@ -44,7 +51,7 @@ void Server::_monitorClients() {
             if (duration > chrono::seconds(30)) {
                 cout << "[SERVER]   Client" << clientIP << " inactive" << endl;
                 _clientStatus[clientIP] = false;
-                _clientLastPulse.erase(clientIP);
+                //_clientLastPulse.erase(clientIP);
             }
         }
         this_thread::sleep_for(chrono::seconds(1));
