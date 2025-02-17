@@ -19,7 +19,7 @@ void loadConfig() {
     Json::Value config;
     configFile >> config;
 
-    SERVER_IP = config["server-ip"].asString();
+    SERVER_IP = config["server_ip"].asString();
     SERVER_PORT = config["server_port"].asInt();
 
     std::cout << "[SERVER]  Loaded Config: Server IP = " << SERVER_IP << ", Port = " << SERVER_PORT << std::endl;
