@@ -97,7 +97,7 @@ void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
     _IPPROTOCOL = IPPROTOCOL;
     _PORT = PORT;
 
-    // Get Client IP and set
+    // Get Client IP and set (could be local addr if set before socket created)
     struct sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
@@ -112,7 +112,10 @@ void Client::_sendMessage(Message msg) {
 
     //cout << "[CLIENT]  Attempting to send message" << endl;
 
-    msg.sourceAddress = _clientIP.sin_addr.s_addr;
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+    getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    msg.sourceAddress = clientAddr.sin_addr.s_addr;
 
     size_t dataSize;
     char* serializedData = msg.serialize(dataSize);
