@@ -1,4 +1,5 @@
 {
     "server_ip": "73.142.20.121",
-    "server_port": 5001
+    "server_port": 5001,
+    "home_directory": "/home/ubuntu"
 }

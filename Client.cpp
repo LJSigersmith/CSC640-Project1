@@ -5,6 +5,9 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <unistd.h>
+#include <filesystem>
+#include <fstream>
+#include <json/json.h>
 
 int Client::getClientSocket() {
     return _clientSocket;
@@ -92,6 +95,7 @@ void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
     _clientSocket = clientSocket;
     _IPPROTOCOL = IPPROTOCOL;
     _PORT = PORT;
+    loadConfig();
 
 }
 
@@ -112,17 +116,58 @@ void Client::_sendMessage(Message msg) {
 
 }
 void Client::_sendHeartbeat(int intervalSeconds) {
+
     auto t = chrono::system_clock::now();
     while (1) {
+
+        // Send pulse every intervalSeconds
         auto now = chrono::system_clock::now();
         chrono::duration<double> elapsed = now - t;
         auto pulseRate = chrono::seconds(intervalSeconds);
-        //string pulseMsg = "[PULSE][" + to_string(_clientID) + "]";
+
+        // Build pulse
         Message pulse;
-        pulse.content = "IM ALIVE";
+        string fileList = "";
+        getFileList(fileList);
+        pulse.content = fileList;
         pulse.type = MessageType::PULSE;
         if (elapsed >= pulseRate) { _sendMessage(pulse); t = chrono::system_clock::now(); }
         // ChatGPT suggested this:
         this_thread::sleep_for(chrono::milliseconds(100)); // Prevent high CPU usage
+    }
+}
+
+void Client::loadConfig() {
+
+    std::ifstream configFile("config.json");
+    if (!configFile) {
+        std::cout << "Error: could not open config.json" << endl;
+    }
+
+    Json::Value config;
+    configFile >> config;
+
+    _homeDirectory = config["home_directory"].asString();
+
+}
+
+void Client::getFileList(string& fileList) {
+    using namespace filesystem;
+
+    if (!exists(_homeDirectory)) {
+        fileList = "[DIR-DNE]"; // DIR Does not exist
+        return; 
+    }
+
+    if (!is_directory(_homeDirectory)) {
+        fileList = "[DIR-IND]"; // DIR is not dir
+        return;
+    }
+
+    if (exists(_homeDirectory) && is_directory(_homeDirectory)) {
+
+        for (const auto& entry : directory_iterator(_homeDirectory)) {
+            fileList += "[" + entry.path().filename().string() + "]";
+        }
     }
 }

@@ -1,5 +1,6 @@
 #include <thread>
 #include "Message.cpp"
+#include <filesystem>
 
 using namespace std;
 class Server;
@@ -18,10 +19,15 @@ class Client {
         void connectToServerOnPort(const char* address, int port);
         void sendMessage(string messageStr);
         void sendHeartbeat(int intervalSeconds);
+        void loadConfig();
+
+        void getFileList(string& fileList);
 
     private :
         int _clientID;
         int _clientSocket, _IPPROTOCOL, _PORT;
+
+        std::filesystem::path _homeDirectory;
         
         thread _clientThread;
         thread _heartbeatThread;
