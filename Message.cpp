@@ -2,6 +2,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unordered_map>
+#include <cstring>
 
 enum class MessageType {
     PULSE, // PULSE will include filemap

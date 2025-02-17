@@ -1,6 +1,7 @@
 #include "Server.h"
 #include "Client.h"
 #include <iostream>
+#include <cstring>
 
 void start_clients_and_server(int numClients, int startingPort) {
     
