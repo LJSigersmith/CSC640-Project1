@@ -13,8 +13,8 @@ int Client::getClientSocket() {
     return _clientSocket;
 }
 
-int Client::getClientID() {
-    return _clientID;
+struct sockaddr_in Client::getClientIP() {
+    return _clientIP;
 }
 
 //thread Client::getClientThread() {
@@ -22,7 +22,6 @@ int Client::getClientID() {
 //}
 
 Client::Client(int PORT, int ID) {
-    _clientID = ID;
     _setupClient(AF_INET, SOCK_STREAM, PORT);
 }
 Client::~Client() {
@@ -74,6 +73,8 @@ void Client::sendMessage(string messageStr) {
     msg.type = MessageType::MESSAGE;
     msg.content = messageStr;
     msg.size = messageStr.size();
+    msg.sourceAddress = _clientIP.sin_addr.s_addr;
+
     thread th(&Client::_sendMessage, this, msg);
     th.detach();
 }
@@ -95,6 +96,13 @@ void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
     _clientSocket = clientSocket;
     _IPPROTOCOL = IPPROTOCOL;
     _PORT = PORT;
+
+    // Get Client IP and set
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+    getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    _clientIP = clientAddr;
+
     loadConfig();
 
 }
@@ -103,7 +111,8 @@ void Client::_sendMessage(Message msg) {
     if (_clientSocket <= 0) { cerr << "[CLIENT]  Socket is invalid, cannot send message" << endl; }
 
     //cout << "[CLIENT]  Attempting to send message" << endl;
-    //const char* message = messageStr.c_str();
+
+    msg.sourceAddress = _clientIP.sin_addr.s_addr;
 
     size_t dataSize;
     char* serializedData = msg.serialize(dataSize);

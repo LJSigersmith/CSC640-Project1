@@ -1,6 +1,6 @@
 #include <thread>
-#include "Message.cpp"
 #include <filesystem>
+#include "Message.h"
 
 using namespace std;
 class Server;
@@ -9,7 +9,7 @@ class Client {
 
     public :
         int getClientSocket();
-        int getClientID();
+        struct sockaddr_in getClientIP();
         //thread getClientThread();
 
         Client(int PORT, int ID);
@@ -24,7 +24,7 @@ class Client {
         void getFileList(string& fileList);
 
     private :
-        int _clientID;
+        struct sockaddr_in _clientIP;
         int _clientSocket, _IPPROTOCOL, _PORT;
 
         std::filesystem::path _homeDirectory;

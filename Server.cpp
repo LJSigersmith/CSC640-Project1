@@ -4,7 +4,7 @@
 #include <unistd.h>
 //#include <arpa/inet.h>
 #include <netinet/in.h>
-#include "Message.cpp"
+#include "Message.h"
 
 int Server::getServerSocket() { return _serverSocket; }
 int Server::getPort() { return _PORT; }
@@ -26,32 +26,56 @@ Server::~Server() {
     }
 }
 
-void Server::_rcvData(string data) {
+void Server::_processPulse(Message pulse) {
 
-    //cout << "[SERVER]  Recieved data: " << data << endl;
+    vector<string> fileList;
+    size_t start = 0;
+    size_t end;
 
-    // Find data type (first [])
-    // string dataType;
-    // size_t start = data.find('[');
-    // size_t end = data.find(']');
 
-    
-    // if (start != string::npos && end != string::npos && start < end) {
-    //      dataType = data.substr(start+1, end - start - 1);
-    //  }
-    // auto it = msgTypeMap.find(dataType);
-    // MessageType msgType = (it != msgTypeMap.end()) ? it->second : MessageType::UNKNOWN;
+    string pulseContent = pulse.content;
+    // ChatGPT
+    while ((end = pulseContent.find("[", start)) != string::npos) {
+        size_t closeBracket = pulseContent.find("]", end);
+        if (closeBracket != string::npos) {
+            string filename = pulseContent.substr(end + 1, closeBracket - end - 1);
+            fileList.push_back(filename);
+        }
+        start = closeBracket + 1;
+    }
 
-    // switch (msgType)
-    // {
-    //  case MessageType::PULSE:
-    //      cout << "[SERVER]  {PULSE} " << endl;
-    //      break;
-    // // case MessageType::COMMAND:
-    // //     break;
-    //  default:
-    //      cout << "[SERVER] {UNKNOWN} " << endl;
-    //  }
+    // Convert source address to iP string
+    struct in_addr srcAddr;
+    srcAddr.s_addr = static_cast<in_addr_t>(pulse.sourceAddress);
+    string clientIP = inet_ntoa(srcAddr);
+
+    _clientData[clientIP] = fileList;
+    cout << "[SERVER]  Updated File Map for " << clientIP << endl;
+
+}
+
+void Server::_processMessage(Message receivedMsg) {
+
+        struct in_addr srcAddr;
+        srcAddr.s_addr = static_cast<in_addr_t>(receivedMsg.sourceAddress);
+        struct in_addr destAddr;
+        destAddr.s_addr = static_cast<in_addr_t>(receivedMsg.destinationAddress);
+
+        cout << "[SERVER] Received Message:\n"
+            << "  Type: " << receivedMsg.messageTypeToString(receivedMsg.type) << "\n"
+            << "  Source: " << inet_ntoa({srcAddr}) << "\n"
+            << "  Destination: " << inet_ntoa({destAddr}) << "\n"
+            << "  Content: " << receivedMsg.content << "\n";
+
+        switch (receivedMsg.type)
+        {
+        case MessageType::PULSE:
+            _processPulse(receivedMsg);
+            break;
+        
+        default:
+            break;
+        }
 
 }
 
@@ -157,21 +181,7 @@ void Server::_startServer() {
                 receivedMsg.destinationAddress = destinationAddress;
                 receivedMsg.content = content;
                 receivedMsg.size = contentSize;
-
-                // Debugging: Print received message
-                struct in_addr srcAddr;
-                srcAddr.s_addr = static_cast<in_addr_t>(receivedMsg.sourceAddress);
-                struct in_addr destAddr;
-                destAddr.s_addr = static_cast<in_addr_t>(receivedMsg.destinationAddress);
-
-                cout << "[SERVER] Received Message:\n"
-                    << "  Type: " << receivedMsg.messageTypeToString(receivedMsg.type) << "\n"
-                    << "  Source: " << inet_ntoa({srcAddr}) << "\n"
-                    << "  Destination: " << inet_ntoa({destAddr}) << "\n"
-                    << "  Content: " << receivedMsg.content << "\n";
-
-                // Call your function to handle received data
-                _rcvData(receivedMsg.content);
+                _processMessage(receivedMsg);
             }
             close(clientSocket);
         });
