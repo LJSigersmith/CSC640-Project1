@@ -11,7 +11,7 @@ enum class MessageType {
     PULSE, // PULSE will include filemap
     COMMAND,
     MESSAGE,
-    FILEMAP,
+    ACKNOWLEDGE,
     UNKNOWN
 };
 

@@ -20,6 +20,7 @@ class Client {
         void sendMessage(string messageStr);
         void sendHeartbeat(int intervalSeconds);
         void loadConfig();
+        void waitForServerResponse();
 
         void getFileList(string& fileList);
 
@@ -31,9 +32,13 @@ class Client {
         
         thread _clientThread;
         thread _heartbeatThread;
+        thread _serverMonitoring;
 
         void _setupClient(int IPPROTOCOL, int STREAM, int PORT);
+
         void _sendMessage(Message msg);
         void _sendHeartbeat(int intervalSeconds);
+
+        void _handleServerResponse();
 
 };

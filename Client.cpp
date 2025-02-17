@@ -30,6 +30,7 @@ Client::~Client() {
         close(_clientSocket);
     }
 }
+
 void Client::connectToServerOnPort(const char* address, int port) {
 
     // Define Server Address
@@ -68,20 +69,6 @@ void Client::connectToServer(Server* server) {
     } else { cout << "[CLIENT]  Connect to server success" << endl; }
 
 }
-void Client::sendMessage(string messageStr) {
-    Message msg;
-    msg.type = MessageType::MESSAGE;
-    msg.content = messageStr;
-    msg.size = messageStr.size();
-    msg.sourceAddress = _clientIP.sin_addr.s_addr;
-
-    thread th(&Client::_sendMessage, this, msg);
-    th.detach();
-}
-void Client::sendHeartbeat(int intervalSeconds) {
-    _heartbeatThread = thread(&Client::_sendHeartbeat, this, intervalSeconds);
-    _heartbeatThread.detach();
-}
 void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
             
     // Most of this setup code is from: https://www.geeksforgeeks.org/socket-programming-in-cpp/
@@ -105,6 +92,21 @@ void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
 
     loadConfig();
 
+}
+
+void Client::sendMessage(string messageStr) {
+    Message msg;
+    msg.type = MessageType::MESSAGE;
+    msg.content = messageStr;
+    msg.size = messageStr.size();
+    msg.sourceAddress = _clientIP.sin_addr.s_addr;
+
+    thread th(&Client::_sendMessage, this, msg);
+    th.detach();
+}
+void Client::sendHeartbeat(int intervalSeconds) {
+    _heartbeatThread = thread(&Client::_sendHeartbeat, this, intervalSeconds);
+    _heartbeatThread.detach();
 }
 
 void Client::_sendMessage(Message msg) {
@@ -149,6 +151,30 @@ void Client::_sendHeartbeat(int intervalSeconds) {
     }
 }
 
+void Client::waitForServerResponse() {
+    _serverMonitoring = thread(&Client::_handleServerResponse, this);
+    _serverMonitoring.detach();
+}
+
+void Client::_handleServerResponse() {
+    while (true) {
+        char buffer[1024] = {0};
+        int bytesRecvd = recv(_clientSocket, buffer, sizeof(buffer), 0);
+
+        if (bytesRecvd <= 0) {
+            cout << "[CLIENT] Couldn't recv from server" << endl;
+            break;
+        }
+
+        Message response = Message::deserialize(buffer, sizeof(buffer));
+        if (response.type == MessageType::ACKNOWLEDGE) {
+            cout << "[CLIENT]  Recieved acknowledgement from server" << endl;
+        }
+
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+}
+
 void Client::loadConfig() {
 
     std::ifstream configFile("config.json");
@@ -162,7 +188,6 @@ void Client::loadConfig() {
     _homeDirectory = config["home_directory"].asString();
 
 }
-
 void Client::getFileList(string& fileList) {
     using namespace filesystem;
 

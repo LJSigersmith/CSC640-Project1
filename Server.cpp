@@ -30,6 +30,25 @@ Server::~Server() {
     }
 }
 
+void Server::_sendAcknowledgement(Message acknowledgeMsg) {
+    
+    struct in_addr destAddr;
+    destAddr.s_addr = static_cast<in_addr_t>(acknowledgeMsg.destinationAddress);
+    string clientIP = inet_ntoa(destAddr);
+
+    if (_clientSockets.find(clientIP) != _clientSockets.end()) {
+        int clientSocket = _clientSockets[clientIP];
+
+        size_t dataSize;
+        char* serializedData = acknowledgeMsg.serialize(dataSize);
+        send(clientSocket, serializedData, dataSize, 0);
+
+        cout << "[SERVER]  Sent acknowledgement" << endl;
+    } else {
+        cout << "[SERVER]  Client socket not found" << endl;
+    }
+}
+
 void Server::_monitorClients() {
 
     cout << "[SERVER]  Monitoring Clients Active" << endl;
@@ -49,7 +68,7 @@ void Server::_monitorClients() {
             auto duration = chrono::duration_cast<chrono::seconds>(now - lastPulse);
             
             if (duration > chrono::seconds(30)) {
-                cout << "[SERVER]   Client" << clientIP << " inactive" << endl;
+                cout << "[SERVER]   Client " << clientIP << " inactive" << endl;
                 _clientStatus[clientIP] = false;
                 //_clientLastPulse.erase(clientIP);
             }
@@ -94,6 +113,15 @@ void Server::_processPulse(Message pulse) {
             cout << "          " << f << endl;
         }
     }
+
+    // Send acknowledgement
+    Message acknowledgementMsg;
+    acknowledgementMsg.type = MessageType::ACKNOWLEDGE;
+    acknowledgementMsg.content = "ACKNOWLEDGED";
+    acknowledgementMsg.sourceAddress = inet_addr("server.ip");
+    acknowledgementMsg.destinationAddress = pulse.sourceAddress;
+
+    _sendAcknowledgement(acknowledgementMsg);
 }
 
 void Server::_processMessage(Message receivedMsg) {
@@ -165,13 +193,20 @@ void Server::_startServer() {
             cout << "[SERVER]  Listening success" << endl;
         }
 
+        sockaddr_in clientAddr;
+        socklen_t clientAddrLen = sizeof(clientAddr);
         // Accept Client Connections
-        int clientSocket = accept(_serverSocket, nullptr, nullptr);
+        int clientSocket = accept(_serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
         if (clientSocket < 0) {
             cout << "[SERVER]  Accepting client connections failed" << endl;
             //close(_serverSocket);
         } else {
             cout << "[SERVER]  Accepted client connections" << endl;
+
+            char clientIP[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &clientAddr.sin_addr, clientIP, INET_ADDRSTRLEN);
+            
+            _clientSockets[clientIP] = clientSocket;
         }
 
         // ChatGPT

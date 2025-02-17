@@ -65,6 +65,7 @@ void startClient(int serverPort) {
     std::string initMsg = "Client " + std::to_string(serverPort) + " connected";
     //client->sendMessage(initMsg);
     client->sendHeartbeat(5);
+    client->waitForServerResponse();
 
     bool inputStatus = true;
     while (true) {

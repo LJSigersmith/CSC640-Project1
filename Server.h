@@ -27,6 +27,9 @@ class Server {
         unordered_map<string, vector<string>> _clientFilemaps;
         unordered_map<string, bool> _clientStatus;
         unordered_map<string, chrono::steady_clock::time_point> _clientLastPulse;
+        unordered_map<string, int> _clientSockets;
+
+        void _sendAcknowledgement(Message acknowledgeMsg);
 
         void _processMessage(Message msg);
         void _processPulse(Message pulse);
