@@ -14,6 +14,10 @@ int Server::getipProtocol() { return _IPPROTOCOL; }
 Server::Server(int PORT) {
 
     _setupServer(AF_INET, SOCK_STREAM, PORT);
+
+    _clientMonitoringThread = thread(&Server::_monitorClients, this);
+    _clientMonitoringThread.detach();
+
     _startServer();
     //_serverThread = thread(&Server::_startServer, this);
     //_serverThread.detach();
@@ -23,6 +27,27 @@ Server::~Server() {
     if (_serverSocket >= 0) {
         cout << "[SERVER]  Closing server socket..." << endl;
         //close(_serverSocket);
+    }
+}
+
+void Server::_monitorClients() {
+
+    cout << "[SERVER]  Monitoring Clients Active" << endl;
+
+    while (true) {
+        for (auto clientPair : _clientLastPulse) {
+            string clientIP = clientPair.first;
+            auto lastPulse = clientPair.second;
+            auto now = chrono::steady_clock::now();
+            auto duration = chrono::duration_cast<chrono::seconds>(now - lastPulse);
+            
+            if (duration > chrono::seconds(30)) {
+                cout << "[SERVER]   Client" << clientIP << " inactive" << endl;
+                _clientStatus[clientIP] = false;
+                _clientLastPulse.erase(clientIP);
+            }
+        }
+        this_thread::sleep_for(chrono::seconds(1));
     }
 }
 
@@ -49,9 +74,19 @@ void Server::_processPulse(Message pulse) {
     srcAddr.s_addr = static_cast<in_addr_t>(pulse.sourceAddress);
     string clientIP = inet_ntoa(srcAddr);
 
-    _clientData[clientIP] = fileList;
-    cout << "[SERVER]  Updated File Map for " << clientIP << endl;
+    // Update Status/Time for Client
+    _clientStatus[clientIP] = true;
+    _clientLastPulse[clientIP] = chrono::steady_clock::now();
 
+    // Update Filemap for Client
+    _clientFilemaps[clientIP] = fileList;
+    cout << "[SERVER]  Updated File Map for " << clientIP << endl;
+    for (auto client : _clientFilemaps) {
+        cout << "          " << client.first << endl;
+        for (auto f : client.second) {
+            cout << "          " << f << endl;
+        }
+    }
 }
 
 void Server::_processMessage(Message receivedMsg) {

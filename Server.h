@@ -20,11 +20,18 @@ class Server {
     private :
         int _serverSocket;
         int _PORT, _ADDR, _IPPROTOCOL;
+        
         thread _serverThread;
-        unordered_map<string, vector<string>> _clientData;
+        thread _clientMonitoringThread;
+
+        unordered_map<string, vector<string>> _clientFilemaps;
+        unordered_map<string, bool> _clientStatus;
+        unordered_map<string, chrono::steady_clock::time_point> _clientLastPulse;
 
         void _processMessage(Message msg);
         void _processPulse(Message pulse);
+
+        void _monitorClients();
 
         void _setupServer(int IPPROTOCOL, int STREAM, int PORT);
         void _startServer();
