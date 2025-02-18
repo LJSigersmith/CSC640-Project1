@@ -61,6 +61,7 @@ g++ *.h *.cpp -std=c++17 -I/usr/include/jsoncpp -ljsoncpp -lcurl
 - Implement **`COMMAND`** messages for executing server-side commands.
 - Enhance the **`ACKNOWLEDGE`** message to include **file maps of all active clients**.
 - Add full file content to server repsonse.
+- Switch to UDP
 - Implement **peer-to-peer communication** between clients.
 - - Node class that has Client and Server member running on their own threads
 - - Add list of peer IPs to config.json
@@ -73,6 +74,8 @@ g++ *.h *.cpp -std=c++17 -I/usr/include/jsoncpp -ljsoncpp -lcurl
 - `server_port`: port of server
 - `home_directory`: directory of files for filemaps
 
+---
+
 ## **Dependencies**
 Ensure you have the following installed:
 - **GCC (g++)** `sudo apt install g++` (Linux) or `brew install gcc` (Mac)
@@ -80,4 +83,7 @@ Ensure you have the following installed:
 - **cURL Library** `sudo apt install libcurl4-openssl-dev`
 
 ---
+
+## **Notes**
+Server port needs to be port forwarded or if AWS instance, needs to have security rule to make port open
 
