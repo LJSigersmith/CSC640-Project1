@@ -117,7 +117,11 @@ void Client::_sendMessage(Message msg) {
     struct sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    
     msg.sourceAddress = clientAddr.sin_addr.s_addr;
+    char ipStr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &clientAddr.sin_addr, ipStr, INET_ADDRSTRLEN);
+    cout << "[CLIENT] Sending message from IP: " << ipStr << endl;
 
     size_t dataSize;
     char* serializedData = msg.serialize(dataSize);

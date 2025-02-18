@@ -36,6 +36,7 @@ void Server::_sendAcknowledgement(Message acknowledgeMsg) {
     destAddr.s_addr = static_cast<in_addr_t>(acknowledgeMsg.destinationAddress);
     string clientIP = inet_ntoa(destAddr);
 
+    cout << "[SERVER]  Checking for client socket in _clientSockets" << endl;
     if (_clientSockets.find(clientIP) != _clientSockets.end()) {
         int clientSocket = _clientSockets[clientIP];
 
