@@ -157,9 +157,13 @@ void Client::_sendMessage(Message msg) {
     struct in_addr addr;
     inet_pton(AF_INET, _publicIP.c_str(), &addr);
     msg.sourceAddress = addr.s_addr;
+
+    struct in_addr srcAddr;
+    srcAddr.s_addr = msg.sourceAddress;
+    string readableSrcAddr = inet_ntoa(srcAddr);
     //char ipStr[INET_ADDRSTRLEN];
     //inet_ntop(AF_INET, &clientAddr.sin_addr, ipStr, INET_ADDRSTRLEN);
-    cout << "[CLIENT] Sending message from IP: " << msg.sourceAddress << endl;
+    cout << "[CLIENT] Sending message from IP: " << readableSrcAddr << endl;
 
     size_t dataSize;
     char* serializedData = msg.serialize(dataSize);
