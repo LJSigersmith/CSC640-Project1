@@ -62,8 +62,16 @@ g++ *.h *.cpp -std=c++17 -I/usr/include/jsoncpp -ljsoncpp -lcurl
 - Enhance the **`ACKNOWLEDGE`** message to include **file maps of all active clients**.
 - Add full file content to server repsonse.
 - Implement **peer-to-peer communication** between clients.
+- - Node class that has Client and Server member running on their own threads
+- - Add list of peer IPs to config.json
+- - Send pulses to each peer, not just one server
 
 ---
+
+# ** Config **
+- `server_ip`: IP of the server
+- `server_port`: port of server
+- `home_directory`: directory of files for filemaps
 
 ## **Dependencies**
 Ensure you have the following installed:
