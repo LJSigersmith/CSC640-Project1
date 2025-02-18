@@ -29,7 +29,7 @@ string getPublicIPaddress() {
         curl_easy_cleanup(curl);
     }
 
-    publicIP.erase(remove(publicIP.begin(), publicIP.end(), '\n'), publicIP.end());
+    publicIP.erase(std::remove(publicIP.begin(), publicIP.end(), '\n'), publicIP.end());
 
     return publicIP;
 }
