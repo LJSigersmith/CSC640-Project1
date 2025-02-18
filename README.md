@@ -24,13 +24,13 @@ Each message contains the following fields:
 ## **Compilation Instructions**
 ### ** Standard Compilation**
 ```sh
-g++ *.h *.cpp -std=c++17 -ljsoncpp -lcurl
+g++ *.cpp -std=c++17 -ljsoncpp -lcurl
 ```
 
 ### ** Fix for Ubuntu (If Linker Errors Occur)**
 If you encounter linker errors related to JSONCPP on Ubuntu, try:
 ```sh
-g++ *.h *.cpp -std=c++17 -I/usr/include/jsoncpp -ljsoncpp -lcurl
+g++ *.cpp -std=c++17 -I/usr/include/jsoncpp -ljsoncpp -lcurl
 ```
 
 ---

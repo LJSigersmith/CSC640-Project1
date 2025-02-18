@@ -67,6 +67,7 @@ void startClient(int serverPort) {
     client->sendHeartbeat(5);
     client->waitForServerResponse();
 
+    // Move this to a Client method
     bool inputStatus = true;
     while (true) {
         if (inputStatus) {
