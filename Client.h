@@ -25,7 +25,10 @@ class Client {
         void getFileList(string& fileList);
 
     private :
-        struct sockaddr_in _clientIP;
+
+        string _publicIP;
+
+        //struct sockaddr_in _clientIP;
         int _clientSocket, _IPPROTOCOL, _PORT;
 
         std::filesystem::path _homeDirectory;

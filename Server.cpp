@@ -37,6 +37,7 @@ void Server::_sendAcknowledgement(Message acknowledgeMsg) {
     string clientIP = inet_ntoa(destAddr);
 
     cout << "[SERVER]  Checking for client socket in _clientSockets" << endl;
+    cout << "[SERVER]  Client IP: " << clientIP << endl;
     if (_clientSockets.find(clientIP) != _clientSockets.end()) {
         int clientSocket = _clientSockets[clientIP];
 
@@ -207,6 +208,7 @@ void Server::_startServer() {
             char clientIP[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &clientAddr.sin_addr, clientIP, INET_ADDRSTRLEN);
             
+            cout << "[SERVER]  Adding to client sockets: " << clientIP << endl;
             _clientSockets[clientIP] = clientSocket;
         }
 

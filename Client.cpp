@@ -8,14 +8,39 @@
 #include <filesystem>
 #include <fstream>
 #include <json/json.h>
+#include <curl/curl.h>
+
+// ChatGPT wrote this
+string getPublicIPaddress() {
+    CURL* curl;
+    CURLcode res;
+    string publicIP;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://checkip.amazonaws.com");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, +[](void* ptr, size_t size, size_t nmemb, string* data) {
+            data->append((char*)ptr, size * nmemb);
+            return size * nmemb;
+        });
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &publicIP);
+
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+    }
+
+    publicIP.erase(remove(publicIP.begin(), publicIP.end(), '\n'), publicIP.end());
+
+    return publicIP;
+}
 
 int Client::getClientSocket() {
     return _clientSocket;
 }
 
-struct sockaddr_in Client::getClientIP() {
-    return _clientIP;
-}
+//struct sockaddr_in Client::getClientIP() {
+//    return _clientIP;
+//}
 
 //thread Client::getClientThread() {
 //    return std::move(_clientThread);
@@ -85,10 +110,13 @@ void Client::_setupClient(int IPPROTOCOL, int STREAM, int PORT) {
     _PORT = PORT;
 
     // Get Client IP and set (could be local addr if set before socket created)
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-    getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-    _clientIP = clientAddr;
+    //struct sockaddr_in clientAddr;
+    //socklen_t clientAddrLen = sizeof(clientAddr);
+    //getsockname(_clientSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    //_clientIP = clientAddr;
+
+    _publicIP = getPublicIPaddress();
+    cout << "[CLIENT]  Public IP: " << _publicIP << endl;
 
     loadConfig();
 
@@ -99,7 +127,11 @@ void Client::sendMessage(string messageStr) {
     msg.type = MessageType::MESSAGE;
     msg.content = messageStr;
     msg.size = messageStr.size();
-    msg.sourceAddress = _clientIP.sin_addr.s_addr;
+
+    //Convert public IP (string) to in_addr
+    struct in_addr addr;
+    inet_pton(AF_INET, _publicIP.c_str(), &addr);
+    msg.sourceAddress = addr.s_addr;
 
     thread th(&Client::_sendMessage, this, msg);
     th.detach();
